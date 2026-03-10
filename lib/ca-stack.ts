@@ -57,7 +57,7 @@ export class CaStack extends cdk.Stack {
     const actorsEndpoint = api.root.addResource('actors');
     const actorEndpoint  = actorsEndpoint.addResource('{actorId}');
 
-    // GET
+    // Get Movie
     const getMovieRolesFn = new lambdanode.NodejsFunction(this, 'GetMovieRolesFn', {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -66,6 +66,22 @@ export class CaStack extends cdk.Stack {
       memorySize: 128,
       environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
     });
+
+    // Get Actor Bio
+const getActorBioFn = new lambdanode.NodejsFunction(this, 'GetActorBioFn', {
+  architecture: lambda.Architecture.ARM_64,
+  runtime: lambda.Runtime.NODEJS_18_X,
+  entry: `${__dirname}/../lambdas/getActorBio.ts`,
+  timeout: cdk.Duration.seconds(10),
+  memorySize: 128,
+  environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
+});
+appTable.grantReadData(getActorBioFn);
+
+actorEndpoint.addMethod('GET', new apig.LambdaIntegration(getActorBioFn, { proxy: true }));
+
+new cdk.CfnOutput(this, 'GetActorBioEndpoint', { value: `${api.url}actors/{actorId}` });
+
     appTable.grantReadData(getMovieRolesFn);
 
     const roleEndpoint = movieEndpoint.addResource('role');
@@ -75,4 +91,6 @@ export class CaStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiBaseUrl', { value: api.url });
     new cdk.CfnOutput(this, 'GetMovieRolesEndpoint', { value: `${api.url}movies/{movieId}/role` });
   }
+
 }
+
