@@ -45,10 +45,13 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     );
 
     return {
-      statusCode: 201,
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ message: 'Role added successfully', role: roleItem }),
-    };
+  statusCode: 201,
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({
+    message: 'Role added successfully',
+    role: { movieId, actorId, roleName, roleDescription },
+  }),
+};
   } catch (error: any) {
     console.error('[ERROR]', error);
     return {
