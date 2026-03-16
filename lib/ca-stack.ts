@@ -8,6 +8,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as path from 'path';
 import { Construct } from 'constructs';
 import { generateBatch } from '../shared/util';
@@ -102,6 +103,12 @@ export class CaStack extends cdk.Stack {
       environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
     });
     appTable.grantReadData(getActorBioFn);
+
+    getActorBioFn.addToRolePolicy(new iam.PolicyStatement({
+    actions: ['translate:TranslateText'],
+    resources: ['*'],
+    }
+  ));
 
     actorEndpoint.addMethod('GET', new apig.LambdaIntegration(getActorBioFn, { proxy: true }));
 
