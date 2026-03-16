@@ -1,38 +1,134 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #1a1a2e;
+  color: #eee;
+  font-family: Arial, sans-serif;
+}
+
 .App {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+h1 {
   text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+  color: #e94560;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.section {
+  background: #16213e;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+  border: 1px solid #0f3460;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+h2 {
+  color: #e94560;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.input-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  font-size: 15px;
+  background: #0f3460;
+  color: #eee;
+}
+
+input::placeholder {
+  color: #888;
+}
+
+input:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+button {
+  background: #e94560;
   color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.App-link {
-  color: #61dafb;
+button:hover {
+  background: #c73652;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.card {
+  background: #0f3460;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 15px;
+  border-left: 4px solid #e94560;
+}
+
+.card h3 {
+  color: #e94560;
+  margin-bottom: 10px;
+}
+
+.card h4 {
+  color: #e94560;
+  margin-bottom: 8px;
+}
+
+.card p {
+  margin-bottom: 8px;
+  line-height: 1.5;
+  color: #ccc;
+}
+
+.card strong {
+  color: #eee;
+}
+
+.role {
+  background: #1a1a2e;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+  border-left: 3px solid #0f3460;
+}
+
+.role h4 {
+  color: #e94560;
+  margin-bottom: 8px;
+}
+
+.error {
+  color: #e94560;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.results {
+  margin-top: 15px;
+}
+
+.results h3 {
+  color: #eee;
+  margin-bottom: 10px;
 }

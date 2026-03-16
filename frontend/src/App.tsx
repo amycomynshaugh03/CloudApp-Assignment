@@ -4,15 +4,15 @@ import { API_BASE_URL } from './config';
 import './App.css';
 
 function App() {
-  const [movieId, setMovieId]         = useState('');
-  const [actorFilter, setActorFilter] = useState('');
-  const [movieRoles, setMovieRoles]   = useState<any>(null);
-  const [movieError, setMovieError]   = useState('');
+  const [movieId, setMovieId]           = useState('');
+  const [actorFilter, setActorFilter]   = useState('');
+  const [movieRoles, setMovieRoles]     = useState<any>(null);
+  const [movieError, setMovieError]     = useState('');
 
-  const [actorId, setActorId]         = useState('');
-  const [movieFilter, setMovieFilter] = useState('');
-  const [actorBio, setActorBio]       = useState<any>(null);
-  const [actorError, setActorError]   = useState('');
+  const [actorId, setActorId]           = useState('');
+  const [movieFilter, setMovieFilter]   = useState('');
+  const [actorBio, setActorBio]         = useState<any>(null);
+  const [actorError, setActorError]     = useState('');
 
   const fetchMovieRoles = async () => {
     setMovieError('');
@@ -46,20 +46,22 @@ function App() {
     <div className="App">
       <h1>Movie Cast App</h1>
 
-     
+      
       <div className="section">
         <h2>Get Movie Roles</h2>
-        <input
-          placeholder="Movie ID (e.g. 1001)"
-          value={movieId}
-          onChange={(e) => setMovieId(e.target.value)}
-        />
-        <input
-          placeholder="Actor ID (optional)"
-          value={actorFilter}
-          onChange={(e) => setActorFilter(e.target.value)}
-        />
-        <button onClick={fetchMovieRoles}>Search</button>
+        <div className="input-row">
+          <input
+            placeholder="Movie ID (e.g. 1001)"
+            value={movieId}
+            onChange={(e) => setMovieId(e.target.value)}
+          />
+          <input
+            placeholder="Actor ID (optional)"
+            value={actorFilter}
+            onChange={(e) => setActorFilter(e.target.value)}
+          />
+          <button onClick={fetchMovieRoles}>Search</button>
+        </div>
 
         {movieError && <p className="error">{movieError}</p>}
 
@@ -81,20 +83,22 @@ function App() {
         )}
       </div>
 
-    
+     
       <div className="section">
         <h2>Get Actor Bio</h2>
-        <input
-          placeholder="Actor ID (e.g. 2001)"
-          value={actorId}
-          onChange={(e) => setActorId(e.target.value)}
-        />
-        <input
-          placeholder="Movie ID (optional)"
-          value={movieFilter}
-          onChange={(e) => setMovieFilter(e.target.value)}
-        />
-        <button onClick={fetchActorBio}>Search</button>
+        <div className="input-row">
+          <input
+            placeholder="Actor ID (e.g. 2001)"
+            value={actorId}
+            onChange={(e) => setActorId(e.target.value)}
+          />
+          <input
+            placeholder="Movie ID (optional)"
+            value={movieFilter}
+            onChange={(e) => setMovieFilter(e.target.value)}
+          />
+          <button onClick={fetchActorBio}>Search</button>
+        </div>
 
         {actorError && <p className="error">{actorError}</p>}
 
