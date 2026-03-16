@@ -4,20 +4,24 @@ import { DynamoDBDocumentClient, GetCommand, QueryCommand } from '@aws-sdk/lib-d
 
 const ddbDocClient = createDDbDocClient();
 
+const headers = {
+  'content-type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+};
+
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const actorId = event.pathParameters?.actorId;
     if (!actorId) {
       return {
         statusCode: 400,
-        headers: { 'content-type': 'application/json' },
+        headers,
         body: JSON.stringify({ message: 'Missing actorId in path' }),
       };
     }
 
     const movieId = event.queryStringParameters?.movie;
 
-   
     const actorResult = await ddbDocClient.send(
       new GetCommand({
         TableName: process.env.TABLE_NAME,
@@ -28,7 +32,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     if (!actorResult.Item) {
       return {
         statusCode: 404,
-        headers: { 'content-type': 'application/json' },
+        headers,
         body: JSON.stringify({ message: `Actor ${actorId} not found` }),
       };
     }
@@ -40,7 +44,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       bio:         actorResult.Item.bio,
     };
 
-   
     if (movieId) {
       const roleResult = await ddbDocClient.send(
         new QueryCommand({
@@ -56,7 +59,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       const roleItem = roleResult.Items?.[0];
       return {
         statusCode: 200,
-        headers: { 'content-type': 'application/json' },
+        headers,
         body: JSON.stringify({
           ...actor,
           role: roleItem
@@ -68,14 +71,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { 'content-type': 'application/json' },
+      headers,
       body: JSON.stringify(actor),
     };
   } catch (error: any) {
     console.error('[ERROR]', error);
     return {
       statusCode: 500,
-      headers: { 'content-type': 'application/json' },
+      headers,
       body: JSON.stringify({ error: error.message }),
     };
   }

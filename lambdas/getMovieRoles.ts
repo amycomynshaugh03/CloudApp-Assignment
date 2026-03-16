@@ -4,23 +4,26 @@ import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const ddbDocClient = createDDbDocClient();
 
+const headers = {
+  'content-type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+};
+
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const movieId = event.pathParameters?.movieId;
     if (!movieId) {
       return {
         statusCode: 400,
-        headers: { 'content-type': 'application/json' },
+        headers,
         body: JSON.stringify({ message: 'Missing movieId in path' }),
       };
     }
 
     const actorId = event.queryStringParameters?.actor;
-
     let result;
 
     if (actorId) {
-      
       result = await ddbDocClient.send(
         new QueryCommand({
           TableName: process.env.TABLE_NAME,
@@ -32,7 +35,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         })
       );
     } else {
-    
       result = await ddbDocClient.send(
         new QueryCommand({
           TableName: process.env.TABLE_NAME,
@@ -45,7 +47,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       );
     }
 
- 
     const roles = (result.Items ?? []).map((item) => ({
       movieId:         item.PK.replace('m#', ''),
       actorId:         item.SK.replace('a#', ''),
@@ -55,14 +56,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { 'content-type': 'application/json' },
+      headers,
       body: JSON.stringify({ movieId, roles }),
     };
   } catch (error: any) {
     console.error('[ERROR]', error);
     return {
       statusCode: 500,
-      headers: { 'content-type': 'application/json' },
+      headers,
       body: JSON.stringify({ error: error.message }),
     };
   }
