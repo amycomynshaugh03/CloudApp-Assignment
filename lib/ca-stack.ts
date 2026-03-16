@@ -4,6 +4,11 @@ import * as lambdanode from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as custom from 'aws-cdk-lib/custom-resources';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as path from 'path';
 import { Construct } from 'constructs';
 import { generateBatch } from '../shared/util';
 import { movies, actors, roles } from '../seed/data';
@@ -119,10 +124,51 @@ export class CaStack extends cdk.Stack {
       { apiKeyRequired: true }
     );
 
-  
+     //S3 Bucket 
+    const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    });
+
+    //CloudFront Distribution
+    const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
+  defaultBehavior: {
+    origin: origins.S3BucketOrigin.withOriginAccessControl(websiteBucket),
+  },
+  defaultRootObject: 'index.html',
+  errorResponses: [
+    {
+      httpStatus: 403,
+      responseHttpStatus: 200,
+      responsePagePath: '/index.html',
+    },
+    {
+      httpStatus: 404,
+      responseHttpStatus: 200,
+      responsePagePath: '/index.html',
+    },
+  ],
+});
+
+    //Deploy React to S3
+    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../frontend/build'))],
+      destinationBucket: websiteBucket,
+      distribution,
+      distributionPaths: ['/*'],
+    });
+
     new cdk.CfnOutput(this, 'ApiBaseUrl',            { value: api.url });
     new cdk.CfnOutput(this, 'GetMovieRolesEndpoint', { value: `${api.url}movies/{movieId}/role` });
     new cdk.CfnOutput(this, 'GetActorBioEndpoint',   { value: `${api.url}actors/{actorId}` });
     new cdk.CfnOutput(this, 'PostMovieRoleEndpoint', { value: `${api.url}movies/role` });
+    new cdk.CfnOutput(this, 'WebsiteUrl', {
+      value: `https://${distribution.distributionDomainName}`,
+      description: 'CloudFront URL for the frontend',
+    });
   }
 }
+
+  
+    
