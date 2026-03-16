@@ -11,6 +11,7 @@
     "cdk": "cdk"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.161",
     "@types/jest": "^30",
     "@types/node": "^24.10.1",
     "aws-cdk": "2.1105.0",
@@ -24,7 +25,9 @@
     "@aws-cdk/aws-cloudfront-origins": "^1.203.0",
     "@aws-cdk/aws-s3": "^1.203.0",
     "@aws-cdk/aws-s3-deployment": "^1.203.0",
+    "@aws-sdk/client-dynamodb": "^3.1009.0",
     "@aws-sdk/client-translate": "^3.1009.0",
+    "@aws-sdk/lib-dynamodb": "^3.1009.0",
     "@aws-sdk/util-dynamodb": "^3.996.1",
     "aws-cdk-lib": "^2.237.1",
     "constructs": "^10.0.0"
