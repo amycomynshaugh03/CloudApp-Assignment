@@ -89,12 +89,13 @@ export class CaStack extends cdk.Stack {
 
     //GET /movies/{movieId}/role 
   const getMovieRolesFn = new lambdanode.NodejsFunction(this, 'GetMovieRolesFn', {
-    architecture: lambda.Architecture.ARM_64,
+    architecture: lambda.Architecture.X86_64,
     runtime: lambda.Runtime.NODEJS_18_X,
     entry: `${__dirname}/../lambdas/getMovieRoles.ts`,
     timeout: cdk.Duration.seconds(10),
     memorySize: 128,
     layers: [sharedLayer],
+    bundling: { forceDockerBundling: false },
     environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
   });
     appTable.grantReadData(getMovieRolesFn);
@@ -104,12 +105,13 @@ export class CaStack extends cdk.Stack {
 
     //GET /actors/{actorId} 
   const getActorBioFn = new lambdanode.NodejsFunction(this, 'GetActorBioFn', {
-    architecture: lambda.Architecture.ARM_64,
+    architecture: lambda.Architecture.X86_64,
     runtime: lambda.Runtime.NODEJS_18_X,
     entry: `${__dirname}/../lambdas/getActorBio.ts`,
     timeout: cdk.Duration.seconds(10),
     memorySize: 128,
     layers: [sharedLayer],
+    bundling: { forceDockerBundling: false },
     environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
   });
     appTable.grantReadData(getActorBioFn);
@@ -124,12 +126,13 @@ export class CaStack extends cdk.Stack {
 
     //POST /movies/role 
   const addMovieRoleFn = new lambdanode.NodejsFunction(this, 'AddMovieRoleFn', {
-    architecture: lambda.Architecture.ARM_64,
+    architecture: lambda.Architecture.X86_64,
     runtime: lambda.Runtime.NODEJS_18_X,
     entry: `${__dirname}/../lambdas/addMovieRole.ts`,
     timeout: cdk.Duration.seconds(10),
     memorySize: 128,
     layers: [sharedLayer],
+    bundling: { forceDockerBundling: false },
     environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
   });
     appTable.grantWriteData(addMovieRoleFn);
