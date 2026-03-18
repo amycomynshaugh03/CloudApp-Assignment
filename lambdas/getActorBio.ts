@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { TranslateClient, TranslateTextCommand } from '@aws-sdk/client-translate';
+import { createDDbDocClient } from '/opt/nodejs/dbClient';
 
 const ddbDocClient = createDDbDocClient();
 const translateClient = new TranslateClient({ region: process.env.REGION });
@@ -35,7 +35,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const movieId  = event.queryStringParameters?.movie;
     const language = event.queryStringParameters?.language;
 
-  
     const actorResult = await ddbDocClient.send(
       new GetCommand({
         TableName: process.env.TABLE_NAME,
@@ -52,7 +51,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     }
 
     let bio = actorResult.Item.bio;
-
     if (language) {
       bio = await translateText(bio, language);
     }
@@ -77,10 +75,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       );
 
       const roleItem = roleResult.Items?.[0];
-
       if (roleItem) {
         let roleDescription = roleItem.roleDescription;
-
         if (language) {
           roleDescription = await translateText(roleDescription, language);
         }
@@ -90,11 +86,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
           headers,
           body: JSON.stringify({
             ...actor,
-            role: {
-              movieId,
-              roleName: roleItem.roleName,
-              roleDescription,
-            },
+            role: { movieId, roleName: roleItem.roleName, roleDescription },
           }),
         };
       }
@@ -114,11 +106,3 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     };
   }
 };
-
-function createDDbDocClient() {
-  const ddbClient = new DynamoDBClient({ region: process.env.REGION });
-  return DynamoDBDocumentClient.from(ddbClient, {
-    marshallOptions: { convertEmptyValues: true, removeUndefinedValues: true },
-    unmarshallOptions: { wrapNumbers: false },
-  });
-}

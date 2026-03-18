@@ -10,6 +10,7 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as path from 'path';
+import * as lambdaBase from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { generateBatch } from '../shared/util';
 import { movies, actors, roles } from '../seed/data';
@@ -73,6 +74,13 @@ export class CaStack extends cdk.Stack {
       description: 'API Key ID — get the value from AWS Console > API Gateway > API Keys',
     });
 
+    //Shared Lambda Layer 
+    const sharedLayer = new lambdaBase.LayerVersion(this, 'SharedLayer', {
+      code: lambdaBase.Code.fromAsset('layers/shared'),
+      compatibleRuntimes: [lambdaBase.Runtime.NODEJS_18_X],
+      description: 'Shared DynamoDB client utility',
+    });
+
   
     const moviesEndpoint = api.root.addResource('movies');
     const movieEndpoint  = moviesEndpoint.addResource('{movieId}');
@@ -80,28 +88,30 @@ export class CaStack extends cdk.Stack {
     const actorEndpoint  = actorsEndpoint.addResource('{actorId}');
 
     //GET /movies/{movieId}/role 
-    const getMovieRolesFn = new lambdanode.NodejsFunction(this, 'GetMovieRolesFn', {
-      architecture: lambda.Architecture.ARM_64,
-      runtime: lambda.Runtime.NODEJS_18_X,
-      entry: `${__dirname}/../lambdas/getMovieRoles.ts`,
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 128,
-      environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
-    });
+  const getMovieRolesFn = new lambdanode.NodejsFunction(this, 'GetMovieRolesFn', {
+    architecture: lambda.Architecture.ARM_64,
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: `${__dirname}/../lambdas/getMovieRoles.ts`,
+    timeout: cdk.Duration.seconds(10),
+    memorySize: 128,
+    layers: [sharedLayer],
+    environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
+  });
     appTable.grantReadData(getMovieRolesFn);
 
     const roleEndpoint = movieEndpoint.addResource('role');
     roleEndpoint.addMethod('GET', new apig.LambdaIntegration(getMovieRolesFn, { proxy: true }));
 
     //GET /actors/{actorId} 
-    const getActorBioFn = new lambdanode.NodejsFunction(this, 'GetActorBioFn', {
-      architecture: lambda.Architecture.ARM_64,
-      runtime: lambda.Runtime.NODEJS_18_X,
-      entry: `${__dirname}/../lambdas/getActorBio.ts`,
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 128,
-      environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
-    });
+  const getActorBioFn = new lambdanode.NodejsFunction(this, 'GetActorBioFn', {
+    architecture: lambda.Architecture.ARM_64,
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: `${__dirname}/../lambdas/getActorBio.ts`,
+    timeout: cdk.Duration.seconds(10),
+    memorySize: 128,
+    layers: [sharedLayer],
+    environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
+  });
     appTable.grantReadData(getActorBioFn);
 
     getActorBioFn.addToRolePolicy(new iam.PolicyStatement({
@@ -113,14 +123,15 @@ export class CaStack extends cdk.Stack {
     actorEndpoint.addMethod('GET', new apig.LambdaIntegration(getActorBioFn, { proxy: true }));
 
     //POST /movies/role 
-    const addMovieRoleFn = new lambdanode.NodejsFunction(this, 'AddMovieRoleFn', {
-      architecture: lambda.Architecture.ARM_64,
-      runtime: lambda.Runtime.NODEJS_18_X,
-      entry: `${__dirname}/../lambdas/addMovieRole.ts`,
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 128,
-      environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
-    });
+  const addMovieRoleFn = new lambdanode.NodejsFunction(this, 'AddMovieRoleFn', {
+    architecture: lambda.Architecture.ARM_64,
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: `${__dirname}/../lambdas/addMovieRole.ts`,
+    timeout: cdk.Duration.seconds(10),
+    memorySize: 128,
+    layers: [sharedLayer],
+    environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
+  });
     appTable.grantWriteData(addMovieRoleFn);
 
  
