@@ -1,17 +1,29 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { TranslateClient, TranslateTextCommand } from '@aws-sdk/client-translate';
 
 const ddbDocClient = createDDbDocClient();
+const translateClient = new TranslateClient({ region: process.env.REGION });
 
 const headers = {
   'content-type': 'application/json',
   'Access-Control-Allow-Origin': '*',
 };
 
+const translateText = async (text: string, targetLanguage: string): Promise<string> => {
+  const command = new TranslateTextCommand({
+    Text: text,
+    SourceLanguageCode: 'en',
+    TargetLanguageCode: targetLanguage,
+  });
+  const result = await translateClient.send(command);
+  return result.TranslatedText ?? text;
+};
+
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
-    const actorId = event.pathParameters?.actorId;
+    const actorId  = event.pathParameters?.actorId;
     if (!actorId) {
       return {
         statusCode: 400,
@@ -20,8 +32,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
     }
 
-    const movieId = event.queryStringParameters?.movie;
+    const movieId  = event.queryStringParameters?.movie;
+    const language = event.queryStringParameters?.language;
 
+  
     const actorResult = await ddbDocClient.send(
       new GetCommand({
         TableName: process.env.TABLE_NAME,
@@ -37,11 +51,17 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
     }
 
+    let bio = actorResult.Item.bio;
+
+    if (language) {
+      bio = await translateText(bio, language);
+    }
+
     const actor = {
       actorId:     actorResult.Item.actorId,
       name:        actorResult.Item.name,
       dateOfBirth: actorResult.Item.dateOfBirth,
-      bio:         actorResult.Item.bio,
+      bio,
     };
 
     if (movieId) {
@@ -57,16 +77,27 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       );
 
       const roleItem = roleResult.Items?.[0];
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          ...actor,
-          role: roleItem
-            ? { movieId, roleName: roleItem.roleName, roleDescription: roleItem.roleDescription }
-            : null,
-        }),
-      };
+
+      if (roleItem) {
+        let roleDescription = roleItem.roleDescription;
+
+        if (language) {
+          roleDescription = await translateText(roleDescription, language);
+        }
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ...actor,
+            role: {
+              movieId,
+              roleName: roleItem.roleName,
+              roleDescription,
+            },
+          }),
+        };
+      }
     }
 
     return {
