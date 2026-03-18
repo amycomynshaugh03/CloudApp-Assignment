@@ -21,6 +21,10 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "/opt/nodejs/dbClient": ["./layers/shared/nodejs/dbClient"]
+    },
     "typeRoots": [
       "./node_modules/@types"
     ]
