@@ -11,6 +11,9 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as path from 'path';
 import * as lambdaBase from 'aws-cdk-lib/aws-lambda';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 import { Construct } from 'constructs';
 import { generateBatch } from '../shared/util';
 import { movies, actors, roles } from '../seed/data';
@@ -28,7 +31,7 @@ export class CaStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-   //Seed
+    //Seed
     new custom.AwsCustomResource(this, 'movieCastSeedData', {
       onCreate: {
         service: 'DynamoDB',
@@ -45,7 +48,7 @@ export class CaStack extends cdk.Stack {
       }),
     });
 
-    //API Gateway 
+    //API Gateway
     const api = new apig.RestApi(this, 'MovieCastApi', {
       description: 'Movie Cast API',
       endpointTypes: [apig.EndpointType.REGIONAL],
@@ -74,70 +77,67 @@ export class CaStack extends cdk.Stack {
       description: 'API Key ID — get the value from AWS Console > API Gateway > API Keys',
     });
 
-    //Shared Lambda Layer 
+    //Shared Lambda Layer
     const sharedLayer = new lambdaBase.LayerVersion(this, 'SharedLayer', {
       code: lambdaBase.Code.fromAsset('layers/shared'),
       compatibleRuntimes: [lambdaBase.Runtime.NODEJS_18_X],
       description: 'Shared DynamoDB client utility',
     });
 
-  
     const moviesEndpoint = api.root.addResource('movies');
     const movieEndpoint  = moviesEndpoint.addResource('{movieId}');
     const actorsEndpoint = api.root.addResource('actors');
     const actorEndpoint  = actorsEndpoint.addResource('{actorId}');
 
-    //GET /movies/{movieId}/role 
-  const getMovieRolesFn = new lambdanode.NodejsFunction(this, 'GetMovieRolesFn', {
-    architecture: lambda.Architecture.X86_64,
-    runtime: lambda.Runtime.NODEJS_18_X,
-    entry: `${__dirname}/../lambdas/getMovieRoles.ts`,
-    timeout: cdk.Duration.seconds(10),
-    memorySize: 128,
-    layers: [sharedLayer],
-    bundling: { forceDockerBundling: false },
-    environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
-  });
+    //GET /movies/{movieId}/role
+    const getMovieRolesFn = new lambdanode.NodejsFunction(this, 'GetMovieRolesFn', {
+      architecture: lambda.Architecture.X86_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/getMovieRoles.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      layers: [sharedLayer],
+      bundling: { forceDockerBundling: false },
+      environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
+    });
     appTable.grantReadData(getMovieRolesFn);
 
     const roleEndpoint = movieEndpoint.addResource('role');
     roleEndpoint.addMethod('GET', new apig.LambdaIntegration(getMovieRolesFn, { proxy: true }));
 
-    //GET /actors/{actorId} 
-  const getActorBioFn = new lambdanode.NodejsFunction(this, 'GetActorBioFn', {
-    architecture: lambda.Architecture.X86_64,
-    runtime: lambda.Runtime.NODEJS_18_X,
-    entry: `${__dirname}/../lambdas/getActorBio.ts`,
-    timeout: cdk.Duration.seconds(10),
-    memorySize: 128,
-    layers: [sharedLayer],
-    bundling: { forceDockerBundling: false },
-    environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
-  });
+    //GET /actors/{actorId}
+    const getActorBioFn = new lambdanode.NodejsFunction(this, 'GetActorBioFn', {
+      architecture: lambda.Architecture.X86_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/getActorBio.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      layers: [sharedLayer],
+      bundling: { forceDockerBundling: false },
+      environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
+    });
     appTable.grantReadData(getActorBioFn);
 
     getActorBioFn.addToRolePolicy(new iam.PolicyStatement({
-    actions: ['translate:TranslateText'],
-    resources: ['*'],
-    }
-  ));
+      actions: ['translate:TranslateText'],
+      resources: ['*'],
+    }));
 
     actorEndpoint.addMethod('GET', new apig.LambdaIntegration(getActorBioFn, { proxy: true }));
 
-    //POST /movies/role 
-  const addMovieRoleFn = new lambdanode.NodejsFunction(this, 'AddMovieRoleFn', {
-    architecture: lambda.Architecture.X86_64,
-    runtime: lambda.Runtime.NODEJS_18_X,
-    entry: `${__dirname}/../lambdas/addMovieRole.ts`,
-    timeout: cdk.Duration.seconds(10),
-    memorySize: 128,
-    layers: [sharedLayer],
-    bundling: { forceDockerBundling: false },
-    environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
-  });
+    //POST /movies/role
+    const addMovieRoleFn = new lambdanode.NodejsFunction(this, 'AddMovieRoleFn', {
+      architecture: lambda.Architecture.X86_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/addMovieRole.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      layers: [sharedLayer],
+      bundling: { forceDockerBundling: false },
+      environment: { TABLE_NAME: appTable.tableName, REGION: cdk.Aws.REGION },
+    });
     appTable.grantWriteData(addMovieRoleFn);
 
- 
     const postRoleEndpoint = moviesEndpoint.addResource('role');
     postRoleEndpoint.addMethod(
       'POST',
@@ -145,20 +145,36 @@ export class CaStack extends cdk.Stack {
       { apiKeyRequired: true }
     );
 
-     //S3 Bucket 
+    //S3 Bucket
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
-    //CloudFront Distribution
+    //Route 53 Hpsted Zone
+    const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+      domainName: 'amycomynshaugh.lol',
+    });
+
+    //ACM Certificate 
+    const certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
+      domainName: 'amycomynshaugh.lol',
+      hostedZone,
+      region: 'us-east-1',
+    });
+
+    //CloudFront Distribution with custom domain
     const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
-  defaultBehavior: {
+    defaultBehavior: {
     origin: origins.S3BucketOrigin.withOriginAccessControl(websiteBucket),
-  },
-  defaultRootObject: 'index.html',
-  errorResponses: [
+    },
+    domainNames: ['amycomynshaugh.lol'],
+    certificate,
+    defaultRootObject: 'index.html',
+    minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+    sslSupportMethod: cloudfront.SSLMethod.SNI,
+    errorResponses: [
     {
       httpStatus: 403,
       responseHttpStatus: 200,
@@ -172,6 +188,15 @@ export class CaStack extends cdk.Stack {
   ],
 });
 
+    //Route 53 
+    new route53.ARecord(this, 'SiteAliasRecord', {
+      zone: hostedZone,
+      recordName: 'amycomynshaugh.lol',
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.CloudFrontTarget(distribution)
+      ),
+    });
+
     //Deploy React to S3
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
       sources: [s3deploy.Source.asset(path.join(__dirname, '../frontend/build'))],
@@ -180,16 +205,11 @@ export class CaStack extends cdk.Stack {
       distributionPaths: ['/*'],
     });
 
-    new cdk.CfnOutput(this, 'ApiBaseUrl',            { value: api.url });
-    new cdk.CfnOutput(this, 'GetMovieRolesEndpoint', { value: `${api.url}movies/{movieId}/role` });
-    new cdk.CfnOutput(this, 'GetActorBioEndpoint',   { value: `${api.url}actors/{actorId}` });
-    new cdk.CfnOutput(this, 'PostMovieRoleEndpoint', { value: `${api.url}movies/role` });
-    new cdk.CfnOutput(this, 'WebsiteUrl', {
-      value: `https://${distribution.distributionDomainName}`,
-      description: 'CloudFront URL for the frontend',
-    });
+    //Outputs
+  new cdk.CfnOutput(this, 'ApiBaseUrl',            { value: api.url });
+  new cdk.CfnOutput(this, 'GetMovieRolesEndpoint', { value: `${api.url}movies/{movieId}/role` });
+  new cdk.CfnOutput(this, 'GetActorBioEndpoint',   { value: `${api.url}actors/{actorId}` });
+  new cdk.CfnOutput(this, 'PostMovieRoleEndpoint', { value: `${api.url}movies/role` });
+  new cdk.CfnOutput(this, 'WebsiteUrl',            { value: 'https://amycomynshaugh.lol' });
   }
 }
-
-  
-    
