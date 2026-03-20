@@ -5,7 +5,7 @@
 }
 
 body {
-  background: #1a1a2e;
+  background: #0a0e1a;
   color: #eee;
   font-family: Arial, sans-serif;
 }
@@ -20,19 +20,21 @@ h1 {
   text-align: center;
   font-size: 2.5rem;
   margin-bottom: 40px;
-  color: #e94560;
+  color: #00d4ff;
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
 }
 
 .section {
-  background: #16213e;
+  background: #0d1b2a;
   border-radius: 12px;
   padding: 30px;
   margin-bottom: 30px;
-  border: 1px solid #0f3460;
+  border: 1px solid #1e3a5f;
+  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);
 }
 
 h2 {
-  color: #e94560;
+  color: #00d4ff;
   margin-bottom: 20px;
   font-size: 1.4rem;
 }
@@ -46,24 +48,25 @@ h2 {
 input {
   flex: 1;
   padding: 12px;
-  border: 1px solid #0f3460;
+  border: 1px solid #1e3a5f;
   border-radius: 6px;
   font-size: 15px;
-  background: #0f3460;
+  background: #112240;
   color: #eee;
 }
 
 input::placeholder {
-  color: #888;
+  color: #557;
 }
 
 input:focus {
   outline: none;
-  border-color: #e94560;
+  border-color: #00d4ff;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
 }
 
 button {
-  background: #e94560;
+  background: linear-gradient(135deg, #0077ff, #00d4ff);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -71,34 +74,37 @@ button {
   font-size: 15px;
   cursor: pointer;
   white-space: nowrap;
+  font-weight: bold;
 }
 
 button:hover {
-  background: #c73652;
+  background: linear-gradient(135deg, #0055cc, #00aadd);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
 }
 
 .card {
-  background: #0f3460;
+  background: #112240;
   border-radius: 8px;
   padding: 20px;
   margin-top: 15px;
-  border-left: 4px solid #e94560;
+  border-left: 4px solid #00d4ff;
+  box-shadow: 0 2px 10px rgba(0, 212, 255, 0.1);
 }
 
 .card h3 {
-  color: #e94560;
+  color: #00d4ff;
   margin-bottom: 10px;
 }
 
 .card h4 {
-  color: #e94560;
+  color: #00d4ff;
   margin-bottom: 8px;
 }
 
 .card p {
   margin-bottom: 8px;
   line-height: 1.5;
-  color: #ccc;
+  color: #aac8e4;
 }
 
 .card strong {
@@ -106,20 +112,20 @@ button:hover {
 }
 
 .role {
-  background: #1a1a2e;
+  background: #0d1b2a;
   border-radius: 6px;
   padding: 15px;
   margin-top: 15px;
-  border-left: 3px solid #0f3460;
+  border-left: 3px solid #0077ff;
 }
 
 .role h4 {
-  color: #e94560;
+  color: #00d4ff;
   margin-bottom: 8px;
 }
 
 .error {
-  color: #e94560;
+  color: #ff4d6d;
   font-weight: bold;
   margin-top: 10px;
 }
